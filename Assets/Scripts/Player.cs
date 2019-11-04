@@ -4,14 +4,17 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+	[Tooltip("Number of meters by seconds")]
 	public float speed;
 
 	Vector2 velocity = new Vector2();
 
+	MovementController movementController;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+		movementController = GetComponent<MovementController>();
     }
 
     // Update is called once per frame
@@ -39,9 +42,9 @@ public class Player : MonoBehaviour
 			vertical -= 1;
 		}
 
-		velocity = new Vector2(horizontal * speed, vertical * 5);
+		velocity = new Vector2(horizontal * speed, vertical * speed);
 
-		transform.Translate(velocity * Time.deltaTime);
+		movementController.Move(velocity * Time.deltaTime);
 
 	}
 }
