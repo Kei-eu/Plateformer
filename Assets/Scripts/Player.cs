@@ -56,8 +56,12 @@ using UnityEngine;
 [RequireComponent(typeof(MovementController))]
 public class Player : MonoBehaviour
 {
+	public float acceleration;
 	[Tooltip("Number of meter by second")]
-	public float speed;
+	public float maxSpeed;
+	float minSpeedThreshold;
+	float maxFallingSpeed;
+
 	[Tooltip("Unity value of max jump height")]
 	public float jumpHeight;
 	[Tooltip("Time in seconds to reach the jump height")]
@@ -74,11 +78,14 @@ public class Player : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{
+		acceleration = acceleration * 5; // reduce big numbers for acceleration in Unity insperctor
+		minSpeedThreshold = acceleration / Application.targetFrameRate * 2f;
 		movementController = GetComponent<MovementController>();
 
 		// Math calculation for gravity and jumpForce
 		gravity = -(2 * jumpHeight) / Mathf.Pow(timeToMaxJump, 2);
 		jumpForce = Mathf.Abs(gravity) * timeToMaxJump;
+		maxFallingSpeed = -jumpForce;
 	}
 
 	// Update is called once per frame
@@ -88,17 +95,16 @@ public class Player : MonoBehaviour
 
 		if (movementController.collisions.bottom || movementController.collisions.top)
 			velocity.y = 0;
+		
+		horizontal = 0;
 
-		if (movementController.collisions.bottom)
+		if (Input.GetKey(KeyCode.D))
 		{
-			if (Input.GetKey(KeyCode.D))
-			{
-				horizontal += 1;
-			}
-			if (Input.GetKey(KeyCode.Q))
-			{
-					horizontal -= 1;
-			}
+			horizontal += 1;
+		}
+		if (Input.GetKey(KeyCode.Q))
+		{
+			horizontal -= 1;
 		}
 
 		if (Input.GetKeyDown(KeyCode.Space) && movementController.collisions.bottom)
@@ -106,9 +112,40 @@ public class Player : MonoBehaviour
 			Jump();
 		}
 
-		velocity.x = horizontal * speed;
+		float ControlModifier = 1f;
+		if (!movementController.collisions.bottom) // Not on the ground
+		{
+			ControlModifier = airControl;
+		}
+
+		velocity.x += horizontal * acceleration * ControlModifier * Time.deltaTime;
+
+		if (velocity.x > maxSpeed)
+			velocity.x = maxSpeed;
+		if (velocity.x < -maxSpeed)
+			velocity.x = -maxSpeed;
+
+		if (horizontal == 0)
+		{
+			if (velocity.x > minSpeedThreshold)
+				velocity.x -= acceleration * Time.deltaTime;
+			else if (velocity.x < -minSpeedThreshold)
+				velocity.x += acceleration * Time.deltaTime;
+			else
+				velocity.x = 0;
+		}
+		if (horizontal == 0 && velocity.x > 0)
+			velocity.x -= acceleration * Time.deltaTime;
+		else if (horizontal == 0 && velocity.x < 0)
+			velocity.x += acceleration * Time.deltaTime;
+
 
 		velocity.y += gravity * Time.deltaTime;
+
+		if (velocity.y < maxFallingSpeed)
+			velocity.y = maxFallingSpeed;
+
+
 
 		movementController.Move(velocity * Time.deltaTime);
 	}

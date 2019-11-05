@@ -99,11 +99,6 @@ public class MovementController : MonoBehaviour
 		CalculateRaySpacings();
 	}
 
-	// Update is called once per frame
-	void Update()
-	{
-	}
-
 	public void Move(Vector2 velocity)
 	{
 		collisions.Reset();
