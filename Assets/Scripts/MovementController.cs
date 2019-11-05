@@ -71,6 +71,7 @@ public class MovementController : MonoBehaviour
 	public int horizontalRayCount;
 	public int verticalRayCount;
 	public LayerMask layerObstacle;
+	public LayerMask layerOneWayPlateform;
 	public Collisions collisions;
 
 	float skinWidth;
@@ -136,13 +137,13 @@ public class MovementController : MonoBehaviour
 
 			if (hit)
 			{
-				velocity.x = (hit.distance - skinWidth) * direction;
-				distance = hit.distance - skinWidth;
+					velocity.x = (hit.distance - skinWidth) * direction;
+					distance = hit.distance - skinWidth;
 
-				if (direction < 0)
-					collisions.left = true;
-				else if (direction > 0)
-					collisions.right = true;
+					if (direction < 0)
+						collisions.left = true;
+					else if (direction > 0)
+						collisions.right = true;
 			}
 		}
 	}
@@ -168,13 +169,16 @@ public class MovementController : MonoBehaviour
 
 			if (hit)
 			{
-				velocity.y = (hit.distance - skinWidth) * direction;
-				distance = hit.distance - skinWidth;
+				//if (!(hit.transform.gameObject.layer == layerOneWayPlateform && direction > 0)) // Test if not touching OneWayPlateform
+				//{
+					velocity.y = (hit.distance - skinWidth) * direction;
+					distance = hit.distance - skinWidth;
 
-				if (direction < 0)
-					collisions.bottom = true;
-				else if (direction > 0)
-					collisions.top = true;
+					if (direction < 0)
+						collisions.bottom = true;
+					else if (direction > 0)
+						collisions.top = true;
+				//}
 			}
 		}
 	}

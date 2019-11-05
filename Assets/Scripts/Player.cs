@@ -120,10 +120,8 @@ public class Player : MonoBehaviour
 
 		velocity.x += horizontal * acceleration * ControlModifier * Time.deltaTime;
 
-		if (velocity.x > maxSpeed)
-			velocity.x = maxSpeed;
-		if (velocity.x < -maxSpeed)
-			velocity.x = -maxSpeed;
+		if (Mathf.Abs(velocity.x) > maxSpeed)
+			velocity.x = maxSpeed * horizontal; // horizontal = 1 or -1;
 
 		if (horizontal == 0)
 		{
@@ -144,8 +142,6 @@ public class Player : MonoBehaviour
 
 		if (velocity.y < maxFallingSpeed)
 			velocity.y = maxFallingSpeed;
-
-
 
 		movementController.Move(velocity * Time.deltaTime);
 	}
