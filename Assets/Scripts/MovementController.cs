@@ -1,4 +1,67 @@
-﻿using System.Collections;
+﻿//using System.Collections;
+//using System.Collections.Generic;
+//using UnityEngine;
+
+//[RequireComponent(typeof(BoxCollider2D))]
+//public class MovementController : MonoBehaviour
+//{
+//	public int horizontalRayCount;
+//	public int verticalRayCount;
+//	public LayerMask layerObstacle;
+
+//	BoxCollider2D boxCollider;
+//	Vector2 bottomLeft;
+//	Vector2 bottomRight;
+//	Vector2 topLeft;
+//	Vector2 topRight;
+
+//	float verticalRaySpacing;
+
+//	// Start is called before the first frame update
+//	void Start()
+//    {
+//		boxCollider = GetComponent<BoxCollider2D>();
+//		verticalRaySpacing = boxCollider.bounds.size.y / (verticalRayCount - 1);
+//	}
+
+
+//	public void Move(Vector2 velocity)
+//	{
+//		CalculateBounds();
+//		HorizontalMove(ref velocity);
+//		transform.Translate(velocity);
+//	}
+
+//	void CalculateBounds()
+//	{
+//		bottomLeft = new Vector2(boxCollider.bounds.min.x, boxCollider.bounds.min.y);
+//		bottomRight = new Vector2(boxCollider.bounds.max.x, boxCollider.bounds.min.y);
+//		topLeft = new Vector2(boxCollider.bounds.min.x, boxCollider.bounds.max.y);
+//		topRight = new Vector2(boxCollider.bounds.max.x, boxCollider.bounds.max.y);
+//	}
+
+//	void HorizontalMove(ref Vector2 velocity)
+//	{
+//		float direction = Mathf.Sign(velocity.x);
+//		float distance = Mathf.Abs(velocity.x);
+
+//		for (int i = 0; i < verticalRayCount; i++)
+//		{
+//			Vector2 baseOrigin = direction == 1 ? bottomRight : bottomLeft;
+//			Vector2 origin = baseOrigin + new Vector2(0, verticalRaySpacing * i);
+
+//			Debug.DrawLine(origin, origin + new Vector2(direction * distance, 0));
+//			RaycastHit2D hit = Physics2D.Raycast(origin, new Vector2(direction, 0), distance, layerObstacle);
+
+//			if (hit)
+//			{
+//				velocity.x = hit.distance * direction;
+//			}
+//		}
+//	}
+//}
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,55 +71,137 @@ public class MovementController : MonoBehaviour
 	public int horizontalRayCount;
 	public int verticalRayCount;
 	public LayerMask layerObstacle;
+	public Collisions collisions;
+
+	float skinWidth;
 
 	BoxCollider2D boxCollider;
-	Vector2 bottomLeft;
-	Vector2 bottomRight;
-	Vector2 topLeft;
-	Vector2 topRight;
+	Vector2 bottomLeft, bottomRight, topLeft, topRight;
 
 	float verticalRaySpacing;
+	float horizontalRaySpacing;
+
+	public struct Collisions
+	{
+		public bool top, bottom, left, right;
+
+		public void Reset()
+		{
+			top = bottom = left = right = false;
+		}
+	}
 
 	// Start is called before the first frame update
 	void Start()
-    {
+	{
 		boxCollider = GetComponent<BoxCollider2D>();
-		verticalRaySpacing = boxCollider.bounds.size.y / (verticalRayCount - 1);
+		skinWidth = 1 / 16f;
+		CalculateRaySpacings();
 	}
 
+	// Update is called once per frame
+	void Update()
+	{
+	}
 
 	public void Move(Vector2 velocity)
 	{
+		collisions.Reset();
+
 		CalculateBounds();
-		HorizontalMove(ref velocity);
+		if (velocity.x != 0)
+			HorizontalMove(ref velocity);
+		if (velocity.y != 0)
+			VerticalMove(ref velocity);
+
 		transform.Translate(velocity);
+	}
+
+	void HorizontalMove(ref Vector2 velocity)
+	{
+		// XXX brique sort du mur, reassign valeur de distance dans le boucle
+
+		float direction = Mathf.Sign(velocity.x);
+		float distance = Mathf.Abs(velocity.x) + skinWidth;
+
+		Vector2 baseOrigin = direction == 1 ? bottomRight : bottomLeft;
+
+		for (int i = 0; i < verticalRayCount; i++)
+		{
+			Vector2 origin = baseOrigin + new Vector2(0, verticalRaySpacing * i);
+
+			//Debug.DrawLine(origin, origin + new Vector2(direction * 1, 0));
+			Debug.DrawLine(origin, origin + new Vector2(direction * distance, 0));
+			RaycastHit2D hit = Physics2D.Raycast(
+				origin,
+				new Vector2(direction, 0),
+				distance,
+				layerObstacle
+				);
+
+			if (hit)
+			{
+				velocity.x = (hit.distance - skinWidth) * direction;
+				distance = hit.distance - skinWidth;
+
+				if (direction < 0)
+					collisions.left = true;
+				else if (direction > 0)
+					collisions.right = true;
+			}
+		}
+	}
+
+	void VerticalMove(ref Vector2 velocity)
+	{
+		float direction = Mathf.Sign(velocity.y);
+		float distance = Mathf.Abs(velocity.y) + skinWidth;
+
+		Vector2 baseOrigin = direction == 1 ? topLeft : bottomLeft;
+
+		for (int i = 0; i < horizontalRayCount; i++)
+		{
+			Vector2 origin = baseOrigin + new Vector2(horizontalRaySpacing * i, 0);
+
+			Debug.DrawLine(origin, origin + new Vector2(0, direction * distance));
+			RaycastHit2D hit = Physics2D.Raycast(
+				origin,
+				new Vector2(0, direction),
+				distance,
+				layerObstacle
+				);
+
+			if (hit)
+			{
+				velocity.y = (hit.distance - skinWidth) * direction;
+				distance = hit.distance - skinWidth;
+
+				if (direction < 0)
+					collisions.bottom = true;
+				else if (direction > 0)
+					collisions.top = true;
+			}
+		}
+	}
+
+	void CalculateRaySpacings()
+	{
+		Bounds bounds = boxCollider.bounds;
+		bounds.Expand(skinWidth * -2f);
+
+		verticalRaySpacing = bounds.size.y / (verticalRayCount - 1);
+		horizontalRaySpacing = bounds.size.x / (horizontalRayCount - 1);
 	}
 
 	void CalculateBounds()
 	{
-		bottomLeft = new Vector2(boxCollider.bounds.min.x, boxCollider.bounds.min.y);
-		bottomRight = new Vector2(boxCollider.bounds.max.x, boxCollider.bounds.min.y);
-		topLeft = new Vector2(boxCollider.bounds.min.x, boxCollider.bounds.max.y);
-		topRight = new Vector2(boxCollider.bounds.max.x, boxCollider.bounds.max.y);
-	}
-	
-	void HorizontalMove(ref Vector2 velocity)
-	{
-		float direction = Mathf.Sign(velocity.x);
-		float distance = Mathf.Abs(velocity.x);
+		Bounds bounds = boxCollider.bounds;
+		bounds.Expand(skinWidth * -2f);
 
-		for (int i = 0; i < verticalRayCount; i++)
-		{
-			Vector2 baseOrigin = direction == 1 ? bottomRight : bottomLeft;
-			Vector2 origin = baseOrigin + new Vector2(0, verticalRaySpacing * i);
-
-			Debug.DrawLine(origin, origin + new Vector2(direction * distance, 0));
-			RaycastHit2D hit = Physics2D.Raycast(origin, new Vector2(direction, 0), distance, layerObstacle);
-
-			if (hit)
-			{
-				velocity.x = hit.distance * direction;
-			}
-		}
+		bottomLeft = new Vector2(bounds.min.x, bounds.min.y);
+		bottomRight = new Vector2(bounds.max.x, bounds.min.y);
+		topLeft = new Vector2(bounds.min.x, bounds.max.y);
+		topRight = new Vector2(bounds.max.x, bounds.max.y);
 	}
 }
+

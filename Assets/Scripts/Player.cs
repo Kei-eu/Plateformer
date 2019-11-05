@@ -1,50 +1,121 @@
-﻿using System.Collections;
+﻿//using System.Collections;
+//using System.Collections.Generic;
+//using UnityEngine;
+
+//public class Player : MonoBehaviour
+//{
+//	[Tooltip("Number of meters by seconds")]
+//	public float speed;
+
+//	Vector2 velocity = new Vector2();
+
+//	MovementController movementController;
+
+//    // Start is called before the first frame update
+//    void Start()
+//    {
+//		movementController = GetComponent<MovementController>();
+//    }
+
+//    // Update is called once per frame
+//    void Update()
+//    {
+//		int horizontal = 0;
+//		int vertical = 0;
+
+//		velocity = Vector2.zero;
+
+//        if (Input.GetKey(KeyCode.Q))
+//		{
+//			horizontal -= 1;
+//		}
+//		if (Input.GetKey(KeyCode.D))
+//		{
+//			horizontal += 1;
+//		}
+//		if (Input.GetKey(KeyCode.Z))
+//		{
+//			vertical += 1;
+//		}
+//		if (Input.GetKey(KeyCode.S))
+//		{
+//			vertical -= 1;
+//		}
+
+//		velocity = new Vector2(horizontal * speed, vertical * speed);
+
+//		movementController.Move(velocity * Time.deltaTime);
+
+//	}
+//}
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(MovementController))]
 public class Player : MonoBehaviour
 {
-	[Tooltip("Number of meters by seconds")]
+	[Tooltip("Number of meter by second")]
 	public float speed;
+	[Tooltip("Unity value of max jump height")]
+	public float jumpHeight;
+	[Tooltip("Time in seconds to reach the jump height")]
+	public float timeToMaxJump;
+
+	public float airControl;
+	
+	float gravity;
+	float jumpForce;
 
 	Vector2 velocity = new Vector2();
-
 	MovementController movementController;
 
-    // Start is called before the first frame update
-    void Start()
-    {
+	// Start is called before the first frame update
+	void Start()
+	{
 		movementController = GetComponent<MovementController>();
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
+		// Math calculation for gravity and jumpForce
+		gravity = -(2 * jumpHeight) / Mathf.Pow(timeToMaxJump, 2);
+		jumpForce = Mathf.Abs(gravity) * timeToMaxJump;
+	}
+
+	// Update is called once per frame
+	void Update()
+	{
 		int horizontal = 0;
-		int vertical = 0;
 
-		velocity = Vector2.zero;
+		if (movementController.collisions.bottom || movementController.collisions.top)
+			velocity.y = 0;
 
-        if (Input.GetKey(KeyCode.Q))
+		if (movementController.collisions.bottom)
 		{
-			horizontal -= 1;
-		}
-		if (Input.GetKey(KeyCode.D))
-		{
-			horizontal += 1;
-		}
-		if (Input.GetKey(KeyCode.Z))
-		{
-			vertical += 1;
-		}
-		if (Input.GetKey(KeyCode.S))
-		{
-			vertical -= 1;
+			if (Input.GetKey(KeyCode.D))
+			{
+				horizontal += 1;
+			}
+			if (Input.GetKey(KeyCode.Q))
+			{
+					horizontal -= 1;
+			}
 		}
 
-		velocity = new Vector2(horizontal * speed, vertical * speed);
+		if (Input.GetKeyDown(KeyCode.Space) && movementController.collisions.bottom)
+		{
+			Jump();
+		}
+
+		velocity.x = horizontal * speed;
+
+		velocity.y += gravity * Time.deltaTime;
 
 		movementController.Move(velocity * Time.deltaTime);
+	}
 
+	void Jump()
+	{
+		velocity.y = jumpForce;
 	}
 }
+
