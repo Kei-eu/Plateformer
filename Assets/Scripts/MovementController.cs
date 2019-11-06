@@ -71,7 +71,7 @@ public class MovementController : MonoBehaviour
 	public int horizontalRayCount;
 	public int verticalRayCount;
 	public LayerMask layerObstacle;
-	public LayerMask layerOneWayPlateform;
+	//public LayerMask layerOneWayPlateform;
 	public Collisions collisions;
 
 	float skinWidth;
@@ -127,7 +127,7 @@ public class MovementController : MonoBehaviour
 			Vector2 origin = baseOrigin + new Vector2(0, verticalRaySpacing * i);
 
 			//Debug.DrawLine(origin, origin + new Vector2(direction * 1, 0));
-			Debug.DrawLine(origin, origin + new Vector2(direction * distance, 0));
+			//Debug.DrawLine(origin, origin + new Vector2(direction * distance, 0));
 			RaycastHit2D hit = Physics2D.Raycast(
 				origin,
 				new Vector2(direction, 0),
@@ -137,6 +137,8 @@ public class MovementController : MonoBehaviour
 
 			if (hit)
 			{
+				if (!(hit.transform.gameObject.tag == "oneWayPlatform"))
+				{
 					velocity.x = (hit.distance - skinWidth) * direction;
 					distance = hit.distance - skinWidth;
 
@@ -144,6 +146,7 @@ public class MovementController : MonoBehaviour
 						collisions.left = true;
 					else if (direction > 0)
 						collisions.right = true;
+				}
 			}
 		}
 	}
@@ -169,8 +172,10 @@ public class MovementController : MonoBehaviour
 
 			if (hit)
 			{
-				//if (!(hit.transform.gameObject.layer == layerOneWayPlateform && direction > 0)) // Test if not touching OneWayPlateform
-				//{
+				//if (!(layerOneWayPlateform == (layerOneWayPlateform | (1 << hit.transform.gameObject.layer)) && direction > 0)) // Test if not touching OneWayPlateform from bottom to top
+				if(!(hit.transform.gameObject.tag == "oneWayPlatform" && direction > 0))
+				{
+					//Block the plateform
 					velocity.y = (hit.distance - skinWidth) * direction;
 					distance = hit.distance - skinWidth;
 
@@ -178,7 +183,7 @@ public class MovementController : MonoBehaviour
 						collisions.bottom = true;
 					else if (direction > 0)
 						collisions.top = true;
-				//}
+				}
 			}
 		}
 	}

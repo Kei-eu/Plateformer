@@ -142,4 +142,7 @@ MonoBehaviour:
   verticalRayCount: 4
   layerObstacle:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 1536
+  layerOneWayPlateform:
+    serializedVersion: 2
+    m_Bits: 1024

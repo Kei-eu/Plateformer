@@ -67,6 +67,9 @@ public class Player : MonoBehaviour
 	[Tooltip("Time in seconds to reach the jump height")]
 	public float timeToMaxJump;
 
+	int jumpCount;
+	public int maxAirJump;
+
 	public float airControl;
 	
 	float gravity;
@@ -107,10 +110,7 @@ public class Player : MonoBehaviour
 			horizontal -= 1;
 		}
 
-		if (Input.GetKeyDown(KeyCode.Space) && movementController.collisions.bottom)
-		{
-			Jump();
-		}
+		UpdateJump();
 
 		float ControlModifier = 1f;
 		if (!movementController.collisions.bottom) // Not on the ground
@@ -148,7 +148,19 @@ public class Player : MonoBehaviour
 
 	void Jump()
 	{
+		jumpCount++;
 		velocity.y = jumpForce;
+	}
+
+	void UpdateJump()
+	{
+		if (movementController.collisions.bottom)
+			jumpCount = 0;
+
+		if (Input.GetKeyDown(KeyCode.Space) && jumpCount <= maxAirJump)
+		{
+			Jump();
+		}
 	}
 }
 
