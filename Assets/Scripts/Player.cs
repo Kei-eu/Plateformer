@@ -75,6 +75,9 @@ public class Player : MonoBehaviour
 	float gravity;
 	float jumpForce;
 	Animator anim;
+	bool doubleJump;
+
+	SpriteRenderer SR;
 
 	Vector2 velocity = new Vector2();
 	MovementController movementController;
@@ -92,6 +95,7 @@ public class Player : MonoBehaviour
 		maxFallingSpeed = -jumpForce;
 
 		anim = GetComponent<Animator>();
+		SR = GetComponent<SpriteRenderer>();
 	}
 
 	// Update is called once per frame
@@ -101,8 +105,6 @@ public class Player : MonoBehaviour
 
 		if (movementController.collisions.bottom || movementController.collisions.top)
 			velocity.y = 0;
-		
-		horizontal = 0;
 
 		if (Input.GetKey(KeyCode.D))
 		{
@@ -113,14 +115,17 @@ public class Player : MonoBehaviour
 			horizontal -= 1;
 		}
 
+		UpdateFlip(velocity);
+
 		UpdateJump();
+
+		UpdateAnimations();
 
 		float ControlModifier = 1f;
 		if (!movementController.collisions.bottom) // Not on the ground
 		{
 			ControlModifier = airControl;
 		}
-
 		velocity.x += horizontal * acceleration * ControlModifier * Time.deltaTime;
 
 		if (Mathf.Abs(velocity.x) > maxSpeed)
@@ -146,30 +151,75 @@ public class Player : MonoBehaviour
 		if (velocity.y < maxFallingSpeed)
 			velocity.y = maxFallingSpeed;
 
-		anim.SetFloat("speed", velocity.x);
-
-		//if (Input.GetKeyDown(KeyCode.H))
-		//{
-		//	anim.SetTrigger("hit");
-		//}
 
 		movementController.Move(velocity * Time.deltaTime);
 	}
 
 	void Jump()
 	{
+		if (!movementController.collisions.bottom)
+		{
+			doubleJump = true;
+			if (jumpCount == 0)
+				jumpCount++;
+		}
+
 		jumpCount++;
 		velocity.y = jumpForce;
 	}
 
 	void UpdateJump()
 	{
-		if (movementController.collisions.bottom)
+		if (movementController.collisions.bottom || movementController.collisions.left || movementController.collisions.right)
+		{
 			jumpCount = 0;
+			doubleJump = false;
+		}
 
 		if (Input.GetKeyDown(KeyCode.Space) && jumpCount <= maxAirJump)
 		{
 			Jump();
+		}
+	}
+
+	void UpdateAnimations()
+	{
+		// On the ground
+		if (movementController.collisions.bottom)
+		{
+			if(velocity.x == 0)
+				anim.Play("VGIdle");
+			else if (velocity.x != 0)
+				anim.Play("VGRun");
+		}
+		// In air
+		else
+		{
+			if(doubleJump)
+				anim.Play("VGDJump");
+			else if (velocity.y > 0)
+			{
+				if (movementController.collisions.left || movementController.collisions.right)
+				{
+					anim.Play("VGWJump");
+				}
+				else anim.Play("VGJump");
+			}
+				
+			else if (velocity.y < 0)
+				anim.Play("VGFall");
+		}
+	}
+
+	void UpdateFlip(Vector2 velocity)
+	{
+		if(velocity.x > 0)
+		{
+			SR.flipX = false;
+		}
+		if (velocity.x < 0)
+		{
+			SR.flipX = true;
 		}
 	}
 }
