@@ -69,11 +69,12 @@ public class Player : MonoBehaviour
 
 	int jumpCount;
 	public int maxAirJump;
-
+	[Range(0,1)]
 	public float airControl;
 	
 	float gravity;
 	float jumpForce;
+	Animator anim;
 
 	Vector2 velocity = new Vector2();
 	MovementController movementController;
@@ -89,6 +90,8 @@ public class Player : MonoBehaviour
 		gravity = -(2 * jumpHeight) / Mathf.Pow(timeToMaxJump, 2);
 		jumpForce = Mathf.Abs(gravity) * timeToMaxJump;
 		maxFallingSpeed = -jumpForce;
+
+		anim = GetComponent<Animator>();
 	}
 
 	// Update is called once per frame
@@ -142,6 +145,13 @@ public class Player : MonoBehaviour
 
 		if (velocity.y < maxFallingSpeed)
 			velocity.y = maxFallingSpeed;
+
+		anim.SetFloat("speed", velocity.x);
+
+		//if (Input.GetKeyDown(KeyCode.H))
+		//{
+		//	anim.SetTrigger("hit");
+		//}
 
 		movementController.Move(velocity * Time.deltaTime);
 	}
