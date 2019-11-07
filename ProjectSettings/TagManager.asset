@@ -16,7 +16,7 @@ TagManager:
   - 
   - Player
   - Obstacle
-  - oneWayPlateform
+  - Enemy
   - 
   - 
   - 
@@ -41,4 +41,16 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 2855079315
+    locked: 0
+  - name: Foreground
+    uniqueID: 2945011347
+    locked: 0
+  - name: Enemy
+    uniqueID: 1358888983
+    locked: 0
+  - name: Player
+    uniqueID: 189225783
     locked: 0

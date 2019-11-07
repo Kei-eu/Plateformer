@@ -75,6 +75,7 @@ public class MovementController : MonoBehaviour
 	public Collisions collisions;
 
 	float skinWidth;
+	float pitDistance;
 
 	BoxCollider2D boxCollider;
 	Vector2 bottomLeft, bottomRight, topLeft, topRight;
@@ -85,10 +86,12 @@ public class MovementController : MonoBehaviour
 	public struct Collisions
 	{
 		public bool top, bottom, left, right;
+		public bool frontPit;
 
 		public void Reset()
 		{
 			top = bottom = left = right = false;
+			frontPit = false;
 		}
 	}
 
@@ -98,6 +101,7 @@ public class MovementController : MonoBehaviour
 		boxCollider = GetComponent<BoxCollider2D>();
 		skinWidth = 1 / 16f;
 		CalculateRaySpacings();
+		pitDistance = 0.5f;
 	}
 
 	public void Move(Vector2 velocity)
@@ -109,6 +113,8 @@ public class MovementController : MonoBehaviour
 			HorizontalMove(ref velocity);
 		if (velocity.y != 0)
 			VerticalMove(ref velocity);
+
+		DetectFrontPit(velocity);
 
 		transform.Translate(velocity);
 	}
@@ -206,6 +212,30 @@ public class MovementController : MonoBehaviour
 		bottomRight = new Vector2(bounds.max.x, bounds.min.y);
 		topLeft = new Vector2(bounds.min.x, bounds.max.y);
 		topRight = new Vector2(bounds.max.x, bounds.max.y);
+	}
+
+	void DetectFrontPit(Vector2 velocity)
+	{
+		// Offset of origin to go to the last pixel of the plateform before turning
+		bottomRight.x += -0.3f;
+		bottomLeft.x += +0.3f;
+
+
+		Vector2 origin = velocity.x > 0 ? bottomRight : bottomLeft;
+		
+		Debug.DrawLine(origin, origin + Vector2.down, Color.red);
+		RaycastHit2D hit = Physics2D.Raycast(
+			origin,
+			Vector2.down,
+			pitDistance,
+			layerObstacle
+			);
+
+		if (!hit)
+		{
+			collisions.frontPit = true;
+		}
+		
 	}
 }
 
