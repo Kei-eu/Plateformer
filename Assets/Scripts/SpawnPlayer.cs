@@ -7,9 +7,14 @@ public class SpawnPlayer : MonoBehaviour
 	public Player playerToSpawn;
 
 
-    // Start is called before the first frame update
-    void Start()
-    {
+	// Start is called before the first frame update
+	void Start()
+	{
+		Spawn();
+	}
+
+	public void Spawn()
+	{
 		Instantiate(playerToSpawn, transform.position, Quaternion.identity);
-    }
+	}
 }

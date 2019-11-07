@@ -1,55 +1,4 @@
-﻿//using System.Collections;
-//using System.Collections.Generic;
-//using UnityEngine;
-
-//public class Player : MonoBehaviour
-//{
-//	[Tooltip("Number of meters by seconds")]
-//	public float speed;
-
-//	Vector2 velocity = new Vector2();
-
-//	MovementController movementController;
-
-//    // Start is called before the first frame update
-//    void Start()
-//    {
-//		movementController = GetComponent<MovementController>();
-//    }
-
-//    // Update is called once per frame
-//    void Update()
-//    {
-//		int horizontal = 0;
-//		int vertical = 0;
-
-//		velocity = Vector2.zero;
-
-//        if (Input.GetKey(KeyCode.Q))
-//		{
-//			horizontal -= 1;
-//		}
-//		if (Input.GetKey(KeyCode.D))
-//		{
-//			horizontal += 1;
-//		}
-//		if (Input.GetKey(KeyCode.Z))
-//		{
-//			vertical += 1;
-//		}
-//		if (Input.GetKey(KeyCode.S))
-//		{
-//			vertical -= 1;
-//		}
-
-//		velocity = new Vector2(horizontal * speed, vertical * speed);
-
-//		movementController.Move(velocity * Time.deltaTime);
-
-//	}
-//}
-
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -76,8 +25,10 @@ public class Player : MonoBehaviour
 	float jumpForce;
 	Animator anim;
 	bool doubleJump;
+	bool freeze;
 
 	SpriteRenderer SR;
+	AnimationTimes animationTimes;
 
 	Vector2 velocity = new Vector2();
 	MovementController movementController;
@@ -96,6 +47,7 @@ public class Player : MonoBehaviour
 
 		anim = GetComponent<Animator>();
 		SR = GetComponent<SpriteRenderer>();
+		animationTimes = GetComponent<AnimationTimes>();
 	}
 
 	// Update is called once per frame
@@ -106,11 +58,11 @@ public class Player : MonoBehaviour
 		if (movementController.collisions.bottom || movementController.collisions.top)
 			velocity.y = 0;
 
-		if (Input.GetKey(KeyCode.D))
+		if (Input.GetKey(KeyCode.D) && !freeze)
 		{
 			horizontal += 1;
 		}
-		if (Input.GetKey(KeyCode.Q))
+		if (Input.GetKey(KeyCode.Q) && !freeze)
 		{
 			horizontal -= 1;
 		}
@@ -184,6 +136,9 @@ public class Player : MonoBehaviour
 
 	void UpdateAnimations()
 	{
+		if (freeze)
+			return;
+
 		// On the ground
 		if (movementController.collisions.bottom)
 		{
@@ -221,6 +176,37 @@ public class Player : MonoBehaviour
 		{
 			SR.flipX = true;
 		}
+	}
+
+	private void OnTriggerEnter2D(Collider2D collision)
+	{
+		Enemy enemy = collision.gameObject.GetComponent<Enemy>();
+
+		if (enemy != null)
+			HitEnemy();
+
+	}
+
+	Coroutine hitEnemy;
+	void HitEnemy()
+	{
+		if (hitEnemy == null)
+		{
+			hitEnemy = StartCoroutine(HitEnemyCoroutine());
+		}
+	}
+
+	IEnumerator HitEnemyCoroutine()
+	{
+		anim.Play("VGHit");
+		freeze = true;
+
+		yield return new WaitForSeconds(animationTimes.GetTime("VGHit"));
+
+		// Destroy and respawn Player
+		SpawnPlayer spawnPlayer = FindObjectOfType<SpawnPlayer>();
+		spawnPlayer.Spawn();
+		Destroy(gameObject);
 	}
 }
 
