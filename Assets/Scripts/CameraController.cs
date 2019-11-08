@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraFollow : MonoBehaviour
+public class CameraController : MonoBehaviour
 {
 	Player player;
 	Camera cam;
@@ -15,6 +15,8 @@ public class CameraFollow : MonoBehaviour
 	float maxXLimit;
 	float minYLimit;
 	float maxYLimit;
+
+	float initialOrthographicSize = 10;
 
 	// Start is called before the first frame update
 	void Start()
@@ -48,10 +50,25 @@ public class CameraFollow : MonoBehaviour
 		}
 	}
 
-
 	void MoveToPlayer()
 	{
 		Vector3 target = new Vector3(Mathf.Clamp(player.transform.position.x, minXLimit, maxXLimit), Mathf.Clamp(player.transform.position.y, minYLimit, maxYLimit), transform.position.z);
 		transform.position = target;
+	}
+
+	Coroutine zoomCoroutine;
+	public void Zoom(float duration, float magnitude = 1)
+	{
+		if (zoomCoroutine == null)
+			zoomCoroutine = StartCoroutine(ZoomCoroutine(magnitude, duration));
+	}
+
+	IEnumerator ZoomCoroutine(float magnitude, float duration)
+	{
+		cam.orthographicSize = initialOrthographicSize / magnitude;
+
+		yield return null;
+
+		zoomCoroutine = null;
 	}
 }
